@@ -104,7 +104,6 @@ module.exports = (app) => {
                     mongoose.disconnect();
                     response.status(500).send(mensagem);
                 });
-
         }
     }
 
