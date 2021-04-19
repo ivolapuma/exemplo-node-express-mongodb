@@ -61,7 +61,7 @@ module.exports = (app) => {
             );            
         },
 
-        async buscarPorRastreador(request, response) {
+        buscarPorRastreador(request, response) {
 
             console.log('Chamado método GET para buscar rastreamentos de um veiculo');
             console.log('request.params:');
@@ -75,45 +75,36 @@ module.exports = (app) => {
             const where = {
                 codigoRastreador: request.params.codigoRastreador
             };
-            
-            const result = await Rastreador.find(
-                where,
-                (error, result) => {
-                    if (error) {
-                        const mensagem = `Erro ao localizar o codigoRastreador: ${error.message}`;
-                        console.log(mensagem);
-                        mongoose.disconnect();
-                        response.status(500).send(mensagem);
-                    } else if (result.length === 0) {
+
+            Rastreador.find(where)
+                .then((result) => {
+                    if (result.length === 0) {
                         const mensagem = `codigoRastreador ${where.codigoRastreador} não localizado`;
                         console.log(mensagem);
                         mongoose.disconnect();
                         response.status(404).send(mensagem);
                     } else {
-                        return result;
+                        Rastreamento.find(where)
+                            .then((result) => {
+                                console.log(`Rastreamentos do veiculo de codigoRastreador retornados com sucesso`);
+                                mongoose.disconnect();
+                                response.status(200).send(result);
+                            })
+                            .catch((error) => {
+                                const mensagem = `Erro ao buscar os rastreamentos do codigoRastreador: ${error.message}`;
+                                console.log(mensagem);
+                                mongoose.disconnect();
+                                response.status(500).send(mensagem);
+                            });
                     }
-                }
-            );
+                })
+                .catch((error) => {
+                    const mensagem = `Erro ao localizar o codigoRastreador: ${error.message}`;
+                    console.log(mensagem);
+                    mongoose.disconnect();
+                    response.status(500).send(mensagem);
+                });
 
-            const rastreador = new Rastreador(result[0]);
-            console.log('codigoRastreador localizado com sucesso')
-            console.log(rastreador);
-
-            Rastreamento.find(
-                where,
-                (error, result) => {
-                    if (error) {
-                        const mensagem = `Erro ao buscar os rastreamentos do codigoRastreador: ${error.message}`;
-                        console.log(mensagem);
-                        mongoose.disconnect();
-                        response.status(500).send(mensagem);
-                    } else {
-                        console.log(`Rastreamentos do veiculo de codigoRastreador retornados com sucesso`);
-                        mongoose.disconnect();
-                        response.status(200).send(result);
-                    }
-                }
-            );
         }
     }
 
