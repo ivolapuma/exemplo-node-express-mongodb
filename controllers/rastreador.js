@@ -6,7 +6,7 @@ module.exports = (app) => {
 
         cadastrar(request, response) {
 
-            console.log('Chamado método POST para cadastrar rastreamento');
+            console.log('Chamado método POST para cadastrar rastreador');
             console.log('request.body:');
             console.log(request.body);
     
@@ -18,11 +18,12 @@ module.exports = (app) => {
             rastreador.save(
                 (error, result) => {
                     if (error) {
-                        console.log(`Erro ao cadastrar o rastreador: ${error.message}`);
+                        const mensagem = `Erro ao cadastrar o rastreador: ${error.message}`;
+                        console.log(mensagem);
                         mongoose.disconnect();
-                        response.status(500).send(`Erro ao cadastrar o rastreador: ${error.message}`);
+                        response.status(500).send(mensagem);
                     } else {
-                        console.log(`Rastreador ${rastreador.codigoRastreador} cadastrado no banco`);
+                        console.log(`Rastreador ${rastreador.codigoRastreador} cadastrado com sucesso`);
                         mongoose.disconnect();
                         response.status(200).send(result);
                     }
