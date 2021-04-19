@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { Types: { ObjectId } } = require('mongoose');
 
 module.exports = (app) => {
 
