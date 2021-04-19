@@ -73,6 +73,67 @@ module.exports = (app) => {
                     mongoose.disconnect();
                     response.status(500).send(mensagem);            
                 });
+        },
+
+        remover(request, response) {
+
+            console.log('Chamado método DELETE para excluir os registros de um rastreador');
+            console.log('request.params:');
+            console.log(request.params);
+
+            const Rastreador = app.models.rastreador;
+            const Rastreamento = app.models.rastreamento;
+
+            mongoose.connect('mongodb://localhost:27017/carlog', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
+
+            const where = {
+                codigoRastreador: request.params.codigoRastreador
+            };
+
+            Rastreador.find(where)
+                .then((result) => {
+
+                    console.log('result:');
+                    console.log(result);
+
+                    if (result.length === 0) {
+                        console.log(`Rastreador ${where.codigoRastreador} não localizado`);
+                        mongoose.disconnect();
+                        response.status(404).send(`Rastreador ${where.codigoRastreador} não localizado`);
+                    } else {
+
+                        Rastreamento.deleteMany(where)
+                            .then((result) => {
+
+                                console.log(`Rastreador ${where.codigoRastreador} | remoção dos registros de rastreamento ok:${result.ok} | quantidade de registros:${result.deletedCount}`);
+
+                                Rastreador.deleteOne(where)
+                                    .then((result) => {
+                                        console.log('rastreador remove result:');
+                                        console.log(result);                    
+                                        mongoose.disconnect();
+                                        response.status(200).send(`Registros do rastreador ${where.codigoRastreador} removidos com sucesso`);
+                                    })
+                                    .catch((error) => {
+                                        console.log(`Erro ao remover o rastreador: ${error.message}`)
+                                        mongoose.disconnect();
+                                        response.status(500).send(`Erro ao remover o rastreador: ${error.message}`);
+                                    });
+
+                            })
+                            .catch((error) => {
+                                console.log(`Erro ao remover os registros de rastreamento do rastreador: ${error.message}`)
+                                mongoose.disconnect();
+                                response.status(500).send(`Erro ao remover os registros de rastreamento do rastreador: ${error.message}`);
+                            });
+
+                    }
+                })
+                .catch((error) => {
+                    console.log(`Erro ao localizar o rastreador: ${error.message}`)
+                    mongoose.disconnect();
+                    response.status(500).send(`Erro ao localizar o rastreador: ${error.message}`);
+                });        
         }
 
     }
