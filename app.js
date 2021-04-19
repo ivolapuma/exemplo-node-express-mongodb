@@ -62,5 +62,4 @@ app.post('/rastreador', (request, response) => {
             }
         }
     );
-
 });
