@@ -9,7 +9,7 @@ module.exports = (app) => {
             console.log('Chamado método POST para cadastrar rastreador');
             console.log('request.body:');
             console.log(request.body);
-    
+
             const Rastreador = app.models.rastreador;
             
             mongoose.connect('mongodb://localhost:27017/carlog', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
