@@ -84,6 +84,8 @@ module.exports = (app) => {
                         const token = jwt.sign(payload, CHAVE_JWT, { expiresIn: TEMPO_EXPIRACAO_TOKEN });
 
                         mongoose.disconnect();
+                        console.log('token:');
+                        console.log(token);
                         response.set('Authorization', token);
                         response.status(200).send(`Usuário logado com sucesso: ${token}`);
                     }

@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+// resolver isso depois com variáveis de ambiente
+const CHAVE_JWT = 'f2fcab389bfad09a77499ebee79f6a9dbf084b770a6d3bc713825942c34285f008bb214e8504e84d2ebd909578e47438669724016848863ecccd8b84ed82f1ca';
 
 module.exports = (app) => {
 
@@ -9,26 +12,55 @@ module.exports = (app) => {
             console.log('Chamado método POST para cadastrar rastreador');
             console.log('request.body:');
             console.log(request.body);
+            console.log('token:');
+            console.log(request.headers.authorization);
 
-            const Rastreador = app.models.rastreador;
-            
-            mongoose.connect('mongodb://localhost:27017/carlog', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
-            
-            const rastreador = new Rastreador(request.body);
-            rastreador.save(
-                (error, result) => {
-                    if (error) {
-                        const mensagem = `Erro ao cadastrar o rastreador: ${error.message}`;
+            try {
+
+                const token = request.headers.authorization;
+                const payload = jwt.verify(token, CHAVE_JWT);
+                console.log('payload:');
+                console.log(payload);
+
+                mongoose.connect('mongodb://localhost:27017/carlog', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
+
+                const Usuario = app.models.usuario;
+                const Rastreador = app.models.rastreador;
+
+                Usuario.find({ login: payload.login })
+                    .then((result) => {
+                        if (result.length === 0) {
+                            const mensagem = `Erro ao verificar token: token inválido`;
+                            console.log(mensagem);
+                            mongoose.disconnect();
+                            response.status(401).send(mensagem);    
+                        } else {
+                            const rastreador = new Rastreador(request.body);
+                            Rastreador.create(rastreador)
+                                .then((result) => {
+                                    console.log(`Rastreador ${rastreador.codigoRastreador} cadastrado com sucesso`);
+                                    mongoose.disconnect();
+                                    response.status(200).send(result);
+                                })
+                                .catch((error) => {
+                                    const mensagem = `Erro ao cadastrar o rastreador: ${error.message}`;
+                                    console.log(mensagem);
+                                    mongoose.disconnect();
+                                    response.status(500).send(mensagem);
+                                });    
+                        }
+                    })
+                    .catch((error) => {
+                        const mensagem = `Erro ao verificar token: ${error.message}`;
                         console.log(mensagem);
                         mongoose.disconnect();
-                        response.status(500).send(mensagem);
-                    } else {
-                        console.log(`Rastreador ${rastreador.codigoRastreador} cadastrado com sucesso`);
-                        mongoose.disconnect();
-                        response.status(200).send(result);
-                    }
-                }
-            );            
+                        response.status(401).send(mensagem);
+                    });
+
+            } catch(error) {
+                console.log(`Erro ao verificar token: ${error.message}`);
+                response.status(401).send(`Erro ao verificar token: ${error.message}`);
+            }
         },
 
         alterar(request, response) {
